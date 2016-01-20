@@ -4,6 +4,8 @@ namespace Minesweeper
 {
     public class Cell
     {
+        
+
         private readonly int _row;
         private readonly int _col;
         public bool IsMine { get; private set; }
@@ -22,35 +24,69 @@ namespace Minesweeper
 
         public void Reveal(Board board)
         {
-            if (IsMine)
+            if (!IsMine)
             {
-                Visibility = CellVisibility.Revealed;
+                BrowseAllCells(board, CountMinesAround);
+                BrowseAllCells(board, Reveal);
             }
-            else
+            Visibility = CellVisibility.Revealed;
+        }
+        
+        public void Reveal2(Board board)
+        {
+            CellAction2 += CountMinesAround;
+            CellAction2 += Reveal;
+            
+            if (!IsMine)
             {
-                for (int rowIndex = Math.Max(_row - 1, 0); rowIndex <= Math.Min(_row + 1, board.NumRow - 1); rowIndex++)
-                {
-                    for (int columnIndex = Math.Max(_col - 1, 0); columnIndex <= Math.Min(_col + 1, board.NumCol - 1); columnIndex++)
-                    {
-                        if (board.Cells[rowIndex, columnIndex].IsMine)
-                        {
-                            MinesAround++;
-                        }
-                    }
-                }
+                BrowseAllCells2(board);
+            }
+            Visibility = CellVisibility.Revealed;
+        }
 
-                if (MinesAround == 0)
+
+        
+
+        public void BrowseAllCells(Board board, Action<Cell, Board> cellAction)
+        {
+            for (int rowIndex = Math.Max(_row - 1, 0); rowIndex <= Math.Min(_row + 1, board.NumRow - 1); rowIndex++)
+            {
+                for (int columnIndex = Math.Max(_col - 1, 0); columnIndex <= Math.Min(_col + 1, board.NumCol - 1); columnIndex++)
                 {
-                    for (int rowIndex = Math.Max(_row - 1, 0); rowIndex <= Math.Min(_row + 1, board.NumRow - 1); rowIndex++)
-                    {
-                        for (int columnIndex = Math.Max(_col - 1, 0); columnIndex <= Math.Min(_col + 1, board.NumCol - 1); columnIndex++)
-                        {
-                            board.Cells[rowIndex, columnIndex].Reveal(board);
-                        }
-                    }
+                    cellAction(board.Cells[rowIndex, columnIndex], board);
                 }
-                Visibility = CellVisibility.Revealed;
             }
         }
+
+        public delegate void EachCellAction(Cell cell, Board board); // Step 1
+        public EachCellAction CellAction2 = null;
+
+        public void BrowseAllCells2(Board board)
+        {
+            for (int rowIndex = Math.Max(_row - 1, 0); rowIndex <= Math.Min(_row + 1, board.NumRow - 1); rowIndex++)
+            {
+                for (int columnIndex = Math.Max(_col - 1, 0); columnIndex <= Math.Min(_col + 1, board.NumCol - 1); columnIndex++)
+                {
+                    CellAction2(board.Cells[rowIndex, columnIndex], board);
+                }
+            }
+        }
+
+        private void CountMinesAround(Cell cell, Board board)
+        {
+            if (cell.IsMine)
+            {
+                MinesAround++;
+            }
+        }
+
+        private void Reveal(Cell cell, Board board)
+        {
+            if (MinesAround == 0)
+            {
+                cell.Reveal(board);
+            }
+        }
+
     }
 }
